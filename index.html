@@ -32,9 +32,10 @@
     <div id="angkatanPage" class="hidden text-center">
         <h2 class="text-xl font-bold mb-6 text-slate-700">Pilih Angkatan</h2>
         <div class="grid grid-cols-1 gap-3">
-            <button onclick="selectAngkatan('27')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 27</button>
-            <button onclick="selectAngkatan('28')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 28</button>
-            <button onclick="selectAngkatan('29')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 29</button>
+            <button onclick="selectAngkatan('27')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer text-sm">Angkatan 27</button>
+            <button onclick="selectAngkatan('28')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer text-sm">Angkatan 28</button>
+            <button onclick="selectAngkatan('29')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer text-sm">Angkatan 29</button>
+            <button onclick="selectAngkatan('Lainnya')" class="py-3 bg-slate-50 border border-dashed border-slate-300 hover:bg-slate-100 rounded-xl font-semibold text-slate-400 cursor-pointer text-sm italic">Lainnya / Umum</button>
         </div>
         <button onclick="showPage('landing')" class="mt-8 text-sm text-slate-400 hover:text-slate-600 font-medium underline cursor-pointer">← Kembali</button>
     </div>
@@ -82,7 +83,7 @@
         <div class="rounded-2xl border border-slate-100 overflow-hidden bg-white">
             <table class="w-full text-left text-sm">
                 <tbody id="dataTable">
-                    <tr><td class="p-8 text-center text-slate-400 italic">Memuat data...</td></tr>
+                    <tr><td class="p-8 text-center text-slate-400 italic font-medium">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -99,13 +100,11 @@ let selectedAngkatan = "";
 let allData = [];
 let currentTab = "Akhwat";
 
-// Navigasi Halaman
 function showPage(pageId) {
     document.querySelectorAll('#landing, #angkatanPage, #formPage, #adminPage').forEach(p => p.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
 }
 
-// Logika Pemilihan
 function selectGender(gender){
     selectedGender = gender;
     const btn = document.getElementById('submitBtn');
@@ -117,7 +116,8 @@ function selectGender(gender){
 
 function selectAngkatan(angkatan){
     selectedAngkatan = angkatan;
-    document.getElementById('badgeInfo').innerText = selectedGender + " - A" + selectedAngkatan;
+    const infoText = angkatan === 'Lainnya' ? selectedGender + " - Umum" : selectedGender + " - A" + angkatan;
+    document.getElementById('badgeInfo').innerText = infoText;
     showPage('formPage');
 }
 
@@ -126,14 +126,12 @@ function showAdmin(){
     loadData();
 }
 
-// Otomatis Hari
 document.getElementById('tanggal').addEventListener('change', function(){
     const hariList = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
     const d = new Date(this.value);
     document.getElementById('hari').value = hariList[d.getDay()];
 });
 
-// Filter Tab Riwayat
 function filterTab(gender) {
     currentTab = gender;
     const tabA = document.getElementById('tabAkhwat');
@@ -149,7 +147,6 @@ function filterTab(gender) {
     renderTable();
 }
 
-// Submit Form ke Google Sheets
 document.getElementById('mentoringForm').addEventListener('submit', function(e){
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -174,7 +171,7 @@ document.getElementById('mentoringForm').addEventListener('submit', function(e){
         body: JSON.stringify(data)
     })
     .then(() => {
-        alert("✅ Berhasil Terkirim!");
+        alert("✅ Laporan Berhasil Terkirim!");
         document.getElementById('mentoringForm').reset();
         btn.innerText = originalText;
         btn.disabled = false;
@@ -187,7 +184,6 @@ document.getElementById('mentoringForm').addEventListener('submit', function(e){
     });
 });
 
-// Ambil Data dari Google Sheets
 function loadData() {
     const table = document.getElementById('dataTable');
     table.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">Memuat database...</td></tr>`;
@@ -203,7 +199,6 @@ function loadData() {
     });
 }
 
-// Tampilkan Tabel Berdasarkan Filter
 function renderTable() {
     const table = document.getElementById('dataTable');
     const filtered = allData.filter(item => item.jenis === currentTab);
@@ -215,11 +210,12 @@ function renderTable() {
 
     table.innerHTML = "";
     filtered.reverse().forEach(item => {
+        const angText = item.angkatan === 'Lainnya' ? "Umum" : "Angkatan " + item.angkatan;
         table.innerHTML += `
             <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                 <td class="p-4">
                     <div class="font-bold text-slate-700 text-[11px]">${item.tanggal}</div>
-                    <div class="text-[9px] text-slate-400 uppercase font-bold">Angkatan ${item.angkatan}</div>
+                    <div class="text-[9px] text-slate-400 uppercase font-bold">${angText}</div>
                 </td>
                 <td class="p-4">
                     <div class="font-semibold text-slate-600 text-xs">${item.mentor}</div>
