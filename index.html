@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentorix - Sistem Mentoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        button:active { transform: scale(0.98); }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-xl bg-white rounded-3xl shadow-xl p-8 fade-in border border-slate-100">
+
+    <div id="landing">
+        <h1 class="text-3xl font-bold text-center mb-2 text-slate-700">Mentorix</h1>
+        <p class="text-center text-slate-400 mb-8 font-medium">Pilih kategori mentoring</p>
+        <div class="grid grid-cols-1 gap-4">
+            <button onclick="selectGender('Akhwat')" class="py-5 bg-pink-100 hover:bg-pink-200 text-pink-700 rounded-2xl font-bold text-lg transition-all shadow-sm border border-pink-200 cursor-pointer">
+                🌸 Akhwat
+            </button>
+            <button onclick="selectGender('Ikhwan')" class="py-5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-2xl font-bold text-lg transition-all shadow-sm border border-blue-200 cursor-pointer">
+                🛡️ Ikhwan
+            </button>
+        </div>
+    </div>
+
+    <div id="angkatanPage" class="hidden text-center">
+        <h2 class="text-xl font-bold mb-6 text-slate-700">Pilih Angkatan</h2>
+        <div class="grid grid-cols-1 gap-3">
+            <button onclick="selectAngkatan('27')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 27</button>
+            <button onclick="selectAngkatan('28')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 28</button>
+            <button onclick="selectAngkatan('29')" class="py-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl font-semibold text-slate-600 cursor-pointer">Angkatan 29</button>
+        </div>
+        <button onclick="showPage('landing')" class="mt-8 text-sm text-slate-400 hover:text-slate-600 font-medium underline cursor-pointer">← Kembali</button>
+    </div>
+
+    <div id="formPage" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-slate-700">Form Mentoring</h2>
+            <span id="badgeInfo" class="px-4 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200"></span>
+        </div>
+        
+        <form id="mentoringForm" class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">Tanggal & Hari</label>
+                <input type="date" id="tanggal" required class="w-full mt-1 p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 bg-slate-50 text-sm">
+                <input type="text" id="hari" placeholder="Hari otomatis" readonly class="w-full mt-2 p-3 border border-slate-100 rounded-xl bg-slate-100 text-slate-500 italic text-sm">
+            </div>
+
+            <input type="text" id="mentor" placeholder="Nama Mentor" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
+            
+            <textarea id="peserta" placeholder="Nama Peserta (Pisahkan dengan koma)" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 h-24 text-sm"></textarea>
+            
+            <input type="text" id="kelas" placeholder="Kelas (Contoh: XI-2)" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
+            
+            <input type="url" id="dokumentasi" placeholder="Link Dokumentasi (Opsional)" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
+            
+            <div class="pt-4">
+                <button type="submit" id="submitBtn" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-900 transition-all cursor-pointer">
+                    Kirim Laporan
+                </button>
+                <button type="button" onclick="showAdmin()" class="w-full mt-4 py-2 text-sm text-slate-400 font-bold hover:text-slate-600 cursor-pointer">
+                    Lihat Data Mentoring →
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="adminPage" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-slate-700">Riwayat Data</h2>
+            <button onclick="showPage('formPage')" class="text-sm font-bold text-slate-500 hover:text-slate-800 underline cursor-pointer">+ Isi Baru</button>
+        </div>
+        <div class="rounded-2xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <tbody id="dataTable">
+                    <tr><td class="p-8 text-center text-slate-400 italic font-medium">Database belum terhubung.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// URL Google Apps Script kamu
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyg20Kf7FlFmc8NWZzOMzci2RXC1AE19ofzylmW-iG9i5vujVGACkoxQbXAKUgkA0JDNg/exec";
+
+let selectedGender = "";
+let selectedAngkatan = "";
+
+function showPage(pageId) {
+    document.getElementById('landing').classList.add('hidden');
+    document.getElementById('angkatanPage').classList.add('hidden');
+    document.getElementById('formPage').classList.add('hidden');
+    document.getElementById('adminPage').classList.add('hidden');
+    document.getElementById(pageId).classList.remove('hidden');
+}
+
+function selectGender(gender){
+    selectedGender = gender;
+    const btn = document.getElementById('submitBtn');
+    if(gender === 'Akhwat') {
+        btn.className = "w-full py-4 bg-pink-400 text-white rounded-2xl font-bold shadow-lg shadow-pink-100 hover:bg-pink-500 transition-all cursor-pointer";
+    } else {
+        btn.className = "w-full py-4 bg-blue-400 text-white rounded-2xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-500 transition-all cursor-pointer";
+    }
+    showPage('angkatanPage');
+}
+
+function selectAngkatan(angkatan){
+    selectedAngkatan = angkatan;
+    document.getElementById('badgeInfo').innerText = selectedGender + " - A" + selectedAngkatan;
+    showPage('formPage');
+}
+
+function showAdmin(){
+    showPage('adminPage');
+    loadData();
+}
+
+// Otomatis Deteksi Hari
+document.getElementById('tanggal').addEventListener('change', function(){
+    const hariList = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+    const d = new Date(this.value);
+    document.getElementById('hari').value = hariList[d.getDay()];
+});
+
+// FUNGSI KIRIM DATA
+document.getElementById('mentoringForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const originalText = btn.innerText;
+    btn.innerText = "Mengirim...";
+    btn.disabled = true;
+
+    const data = {
+        jenis: selectedGender,
+        angkatan: selectedAngkatan,
+        hari: document.getElementById('hari').value,
+        tanggal: document.getElementById('tanggal').value,
+        mentor: document.getElementById('mentor').value,
+        peserta: document.getElementById('peserta').value,
+        kelas: document.getElementById('kelas').value,
+        dokumentasi: document.getElementById('dokumentasi').value || "-"
+    };
+
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        alert("✅ Laporan Berhasil Terkirim!");
+        document.getElementById('mentoringForm').reset();
+        btn.innerText = originalText;
+        btn.disabled = false;
+        showAdmin();
+    })
+    .catch(err => {
+        alert("❌ Terjadi Kesalahan: " + err);
+        btn.innerText = originalText;
+        btn.disabled = false;
+    });
+});
+
+// FUNGSI AMBIL DATA UNTUK TABEL
+function loadData() {
+    const table = document.getElementById('dataTable');
+    table.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">Memuat data...</td></tr>`;
+
+    fetch(WEB_APP_URL)
+    .then(res => res.json())
+    .then(data => {
+        if (!data || data.length === 0) {
+            table.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic font-medium">Belum ada riwayat mentoring.</td></tr>`;
+            return;
+        }
+        
+        table.innerHTML = "";
+        data.reverse().forEach(item => {
+            table.innerHTML += `
+                <tr class="border-b border-slate-50">
+                    <td class="p-4">
+                        <div class="font-bold text-slate-700 text-[11px]">${item.tanggal}</div>
+                        <div class="text-[9px] text-slate-400 uppercase font-bold">${item.jenis}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-semibold text-slate-600 text-xs">${item.mentor}</div>
+                        <div class="text-[10px] text-slate-400 italic">${item.kelas}</div>
+                    </td>
+                    <td class="p-4 text-right">
+                        ${item.dokumentasi !== "-" ? `<a href="${item.dokumentasi}" target="_blank" class="text-blue-500 text-[10px] font-bold underline bg-blue-50 px-2 py-1 rounded">Buka Link</a>` : "<span class='text-slate-300 text-[10px] italic'>No File</span>"}
+                    </td>
+                </tr>`;
+        });
+    })
+    .catch(() => {
+        table.innerHTML = `<tr><td class="p-8 text-center text-red-300 italic text-xs">Database belum terhubung. Cek Google Sheets kamu atau pastikan deployment sudah 'Anyone'.</td></tr>`;
+    });
+}
+</script>
+
+</body>
+</html>
