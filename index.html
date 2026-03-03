@@ -54,8 +54,12 @@
             </div>
 
             <input type="text" id="mentor" placeholder="Nama Mentor" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
-            <textarea id="peserta" placeholder="Nama Peserta (Pisahkan dengan koma)" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 h-24 text-sm"></textarea>
-            <input type="text" id="kelas" placeholder="Kelas (Contoh: XI-2)" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
+            <textarea id="peserta" placeholder="Nama Peserta" required class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 h-24 text-sm"></textarea>
+            
+            <div id="kelasContainer">
+                <input type="text" id="kelas" placeholder="Kelas (Contoh: XI-2)" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
+            </div>
+
             <input type="url" id="dokumentasi" placeholder="Link Dokumentasi (Opsional)" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-slate-400 text-sm">
             
             <div class="pt-4">
@@ -92,7 +96,6 @@
 </div>
 
 <script>
-// Masukkan URL Web App Google Script kamu di bawah ini
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyg20Kf7FlFmc8NWZzOMzci2RXC1AE19ofzylmW-iG9i5vujVGACkoxQbXAKUgkA0JDNg/exec";
 
 let selectedGender = "";
@@ -118,6 +121,18 @@ function selectAngkatan(angkatan){
     selectedAngkatan = angkatan;
     const infoText = angkatan === 'Lainnya' ? selectedGender + " - Umum" : selectedGender + " - A" + angkatan;
     document.getElementById('badgeInfo').innerText = infoText;
+    
+    // Logika Sembunyikan Kelas jika pilih Lainnya
+    const kelasDiv = document.getElementById('kelasContainer');
+    const kelasInput = document.getElementById('kelas');
+    if(angkatan === 'Lainnya') {
+        kelasDiv.classList.add('hidden');
+        kelasInput.value = "-"; // Isi otomatis dengan strip
+    } else {
+        kelasDiv.classList.remove('hidden');
+        kelasInput.value = ""; // Kosongkan agar bisa diisi
+    }
+    
     showPage('formPage');
 }
 
@@ -161,7 +176,7 @@ document.getElementById('mentoringForm').addEventListener('submit', function(e){
         tanggal: document.getElementById('tanggal').value,
         mentor: document.getElementById('mentor').value,
         peserta: document.getElementById('peserta').value,
-        kelas: document.getElementById('kelas').value,
+        kelas: document.getElementById('kelas').value || "-",
         dokumentasi: document.getElementById('dokumentasi').value || "-"
     };
 
@@ -186,7 +201,7 @@ document.getElementById('mentoringForm').addEventListener('submit', function(e){
 
 function loadData() {
     const table = document.getElementById('dataTable');
-    table.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">Memuat database...</td></tr>`;
+    table.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic font-medium">Memuat database...</td></tr>`;
 
     fetch(WEB_APP_URL)
     .then(res => res.json())
